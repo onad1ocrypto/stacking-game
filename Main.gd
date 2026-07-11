@@ -406,6 +406,8 @@ func _setup_ui():
 	leaderboard_status_label.add_theme_font_size_override("font_size", 14)
 	leaderboard_status_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.6))
 	leaderboard_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	leaderboard_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+	leaderboard_status_label.custom_minimum_size = Vector2(280, 0)
 	lb_outer_vbox.add_child(leaderboard_status_label)
 
 	leaderboard_list_vbox = VBoxContainer.new()
@@ -814,15 +816,22 @@ func _fetch_leaderboard():
 	if err != OK:
 		leaderboard_status_label.text = "Network error"
 
-func _on_leaderboard_completed(_result, response_code, _headers, body):
+func _on_leaderboard_completed(result, response_code, _headers, body):
+	var raw_text = body.get_string_from_utf8()
+	print("[Leaderboard] request result=", result, " http_code=", response_code, " body=", raw_text)
+
+	if response_code == 0:
+		leaderboard_status_label.text = "No response — CORS or network blocked (see console)"
+		return
+
 	if response_code != 200:
-		leaderboard_status_label.text = "Failed to load (code %d)" % response_code
+		leaderboard_status_label.text = "Server error %d: %s" % [response_code, raw_text.left(120)]
 		return
 
 	var json = JSON.new()
-	var parse_err = json.parse(body.get_string_from_utf8())
+	var parse_err = json.parse(raw_text)
 	if parse_err != OK:
-		leaderboard_status_label.text = "Failed to parse data"
+		leaderboard_status_label.text = "Parse error: %s | raw: %s" % [json.get_error_message(), raw_text.left(80)]
 		return
 
 	var entries: Array = json.data
