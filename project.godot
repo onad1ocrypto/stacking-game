@@ -14,9 +14,9 @@ config/name="stacking-game"
 run/main_scene="uid://dfkpr5cffa4mt"
 config/features=PackedStringArray("4.7", "Forward Plus")
 boot_splash/bg_color=Color(0.25926653, 0.39386803, 0.91329736, 1)
-boot_splash/image="uid://isadq80j72x3"
+boot_splash/image="uid://bniyub7ly7qsa"
 config/icon="res://icon.svg"
-boot_splash/minimum_display_time=5000
+boot_splash/minimum_display_time=5500
 
 [display]
 
