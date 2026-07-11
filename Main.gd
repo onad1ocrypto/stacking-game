@@ -891,7 +891,7 @@ func _render_leaderboard_from_json(raw_text: String):
 	for entry in entries:
 		var row = Label.new()
 		var p_name = str(entry.get("player_name", "???"))
-		var p_score = str(entry.get("score", 0))
+		var p_score = str(int(entry.get("score", 0)))
 		row.text = "%d. %s — %s" % [rank, p_name, p_score]
 		row.add_theme_font_size_override("font_size", 16)
 		row.add_theme_color_override("font_color", Color(1, 1, 1, 0.9))
