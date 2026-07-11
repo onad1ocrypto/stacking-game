@@ -31,6 +31,7 @@ var sky_time := 0.0
 var score_label: Label
 var best_label: Label
 var new_best_label: Label
+var new_best_shown := false
 var status_panel: PanelContainer
 var status_label: Label
 var game_over_layer: CanvasLayer
@@ -610,12 +611,15 @@ func _place_block():
 	blocks.append({"node": placed, "size": new_size, "pos": new_pos})
 
 	score += 1
-	new_best_label.visible = false
 	if score > high_score:
 		high_score = score
 		_save_high_score()
 		new_best_label.visible = true
-		_play_sfx(sfx_newbest, false)
+		if not new_best_shown:
+			new_best_shown = true
+			_play_sfx(sfx_newbest, false)
+		else:
+			_play_sfx(sfx_place)
 	else:
 		_play_sfx(sfx_place)
 	score_label.text = "Score: %d" % score
@@ -685,6 +689,7 @@ func _restart():
 	game_over = false
 	game_over_layer.visible = false
 	new_best_label.visible = false
+	new_best_shown = false
 	score_label.text = "Score: 0"
 	best_label.text = "Best: %d" % high_score
 	score_submitted = false
