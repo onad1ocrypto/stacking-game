@@ -58,7 +58,6 @@ var leaderboard_status_label: Label
 var bgm_player: AudioStreamPlayer
 var sfx_place: AudioStreamPlayer
 var sfx_gameover: AudioStreamPlayer
-var sfx_newbest: AudioStreamPlayer
 var music_muted := false
 
 const SAVE_PATH := "user://highscore.save"
@@ -615,16 +614,11 @@ func _place_block():
 		high_score = score
 		_save_high_score()
 		new_best_label.visible = true
-		if not new_best_shown:
-			new_best_shown = true
-			_play_sfx(sfx_newbest, false)
-		else:
-			_play_sfx(sfx_place)
-	else:
-		_play_sfx(sfx_place)
+		new_best_shown = true
 	score_label.text = "Score: %d" % score
 	best_label.text = "Best: %d" % high_score
 	move_speed += speed_increment
+	_play_sfx(sfx_place)
 
 	current_block = null
 	_spawn_next_block()
@@ -734,10 +728,6 @@ func _setup_audio():
 	sfx_gameover = AudioStreamPlayer.new()
 	add_child(sfx_gameover)
 	_load_sfx(sfx_gameover, "res://audio/gameover.ogg")
-
-	sfx_newbest = AudioStreamPlayer.new()
-	add_child(sfx_newbest)
-	_load_sfx(sfx_newbest, "res://audio/newbest.ogg")
 
 func _load_sfx(player: AudioStreamPlayer, path: String):
 	if ResourceLoader.exists(path):
