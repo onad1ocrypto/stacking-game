@@ -807,6 +807,13 @@ func _hide_leaderboard():
 	leaderboard_layer.visible = false
 
 func _fetch_leaderboard():
+	if OS.has_feature("web"):
+		_fetch_leaderboard_web()
+	else:
+		_fetch_leaderboard_native()
+
+# ---- Native (desktop) path: use Godot's built-in HTTPRequest ----
+func _fetch_leaderboard_native():
 	var url = SUPABASE_URL + "/rest/v1/scores?select=player_name,score&order=score.desc&limit=10"
 	var headers = [
 		"apikey: " + SUPABASE_KEY,
@@ -823,11 +830,50 @@ func _on_leaderboard_completed(result, response_code, _headers, body):
 	if response_code == 0:
 		leaderboard_status_label.text = "No response — CORS or network blocked (see console)"
 		return
-
 	if response_code != 200:
 		leaderboard_status_label.text = "Server error %d: %s" % [response_code, raw_text.left(120)]
 		return
 
+	_render_leaderboard_from_json(raw_text)
+
+# ---- Web export path: HTTPRequest's body-reading is unreliable on Web,
+# so use the browser's native fetch() via JavaScriptBridge instead ----
+var _js_leaderboard_callback: JavaScriptObject
+
+func _fetch_leaderboard_web():
+	var url = SUPABASE_URL + "/rest/v1/scores?select=player_name,score&order=score.desc&limit=10"
+	_js_leaderboard_callback = JavaScriptBridge.create_callback(_on_js_leaderboard_result)
+	JavaScriptBridge.get_interface("window").godotLeaderboardCallback = _js_leaderboard_callback
+
+	var js_code = """
+	(function() {
+		fetch("%s", {
+			method: "GET",
+			headers: {
+				"apikey": "%s",
+				"Authorization": "Bearer %s"
+			}
+		})
+		.then(function(r) { return r.text(); })
+		.then(function(t) { window.godotLeaderboardCallback(t); })
+		.catch(function(e) { window.godotLeaderboardCallback("__FETCH_ERROR__:" + e); });
+	})();
+	""" % [url, SUPABASE_KEY, SUPABASE_KEY]
+
+	JavaScriptBridge.eval(js_code, true)
+
+func _on_js_leaderboard_result(args):
+	var raw_text = str(args[0])
+	print("[Leaderboard-web] raw=", raw_text)
+
+	if raw_text.begins_with("__FETCH_ERROR__"):
+		leaderboard_status_label.text = "Fetch error: " + raw_text
+		return
+
+	_render_leaderboard_from_json(raw_text)
+
+# ---- Shared: parse JSON text and populate the on-screen list ----
+func _render_leaderboard_from_json(raw_text: String):
 	var json = JSON.new()
 	var parse_err = json.parse(raw_text)
 	if parse_err != OK:
