@@ -23,6 +23,7 @@ var move_speed := 0.0
 var score := 0
 var high_score := 0
 var game_over := false
+var ignore_input_until_ms := 0
 var camera: Camera3D
 var world_env: WorldEnvironment
 var sky_time := 0.0
@@ -85,6 +86,7 @@ func _ready():
 	_setup_ui()
 	_spawn_base()
 	_spawn_next_block()
+	ignore_input_until_ms = Time.get_ticks_msec() + 500
 
 # ---------- WORLD SETUP (sky, fog, floor, lighting) ----------
 func _setup_world():
@@ -561,6 +563,16 @@ func _process(delta):
 
 # ---------- INPUT ----------
 func _input(event):
+	# While typing in the name field, don't let game shortcuts (R, Space, click) fire.
+	if name_input and name_input.has_focus():
+		return
+
+	# Ignore input for a brief moment after the game starts/restarts — the
+	# browser's initial click to focus the canvas can otherwise be read as
+	# a genuine "drop the block" action.
+	if Time.get_ticks_msec() < ignore_input_until_ms:
+		return
+
 	if event is InputEventKey and event.pressed and event.keycode == KEY_M:
 		_toggle_music_mute()
 
@@ -691,6 +703,7 @@ func _restart():
 	score_submitted = false
 	submit_button.disabled = false
 	submit_status_label.text = ""
+	ignore_input_until_ms = Time.get_ticks_msec() + 300
 	_spawn_base()
 	_spawn_next_block()
 
