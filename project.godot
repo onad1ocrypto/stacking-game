@@ -16,7 +16,7 @@ config/features=PackedStringArray("4.7", "Forward Plus")
 boot_splash/bg_color=Color(0.72352856, 0.3115052, 0.03469592, 1)
 boot_splash/image="uid://bniyub7ly7qsa"
 config/icon="res://icon.svg"
-boot_splash/minimum_display_time=5500
+boot_splash/minimum_display_time=2000
 
 [display]
 
